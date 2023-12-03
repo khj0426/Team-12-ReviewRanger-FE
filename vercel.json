@@ -1,12 +1,9 @@
 {
+
   "rewrites": [
-    { "source": "/", "destination": "http://3.36.25.25:8080/" },
-    { "source": "/sign-up", "destination": "http://3.36.25.25:8080/sign-up" },
-    { "source": "/login", "destination": "http://3.36.25.25:8080/login" },
-    { "source": "/profile", "destination": "http://3.36.25.25:8080/profile" },
-    { "source": "/review-management/:reviewId", "destination": "http://3.36.25.25:8080/review-management/:reviewId" },
-    { "source": "/review-response/:reviewId", "destination": "http://3.36.25.25:8080/review-response/:reviewId" },
-    { "source": "/review-result/:reviewId", "destination": "http://3.36.25.25:8080/review-result/:reviewId" },
-    { "source": "/review-creation", "destination": "http://3.36.25.25:8080/review-creation" }
+    {
+      "source": "/api/:path*",
+      "destination": "http://3.36.25.25:8080/*"
+    }
   ]
 }
