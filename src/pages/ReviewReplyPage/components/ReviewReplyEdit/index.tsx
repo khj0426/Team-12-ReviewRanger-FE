@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { FormProvider, useForm, useFieldArray } from 'react-hook-form'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useToast } from '@/hooks'
-import { Modal } from '@/components'
+import { Header, Modal } from '@/components'
 import {
   useEditResponse,
   useGetReviewForParticipation,
@@ -29,7 +29,7 @@ const ReviewReplyEdit = () => {
     responserId: user?.id as number,
   })
   const { mutate: editResponse } = useEditResponse()
-  const { title, questions } = reviewData
+  const { title, questions, description } = reviewData
 
   const methods = useForm<ReviewReplyEditType>({
     defaultValues: {
@@ -69,8 +69,9 @@ const ReviewReplyEdit = () => {
       labelRef.current.click()
     }
     prevReplyData.forEach((receiverData) => {
-      const { replies, receiver, responser } = receiverData
+      const { replies, receiver, responser, id } = receiverData
       const replyTarget = {
+        id,
         receiverId: receiver.id,
         responserId: responser.id,
         replies: replies.map(
@@ -80,14 +81,12 @@ const ReviewReplyEdit = () => {
             answerHexa,
             answerRating,
             answerText,
-            id,
           }) => {
             return {
               answerChoice: answerChoice?.optionId ?? null,
               answerHexa,
               answerRating,
               answerText,
-              id,
               isRequired: (
                 questions.find(({ id }) => id === questionId) as Question
               ).isRequired,
@@ -117,31 +116,39 @@ const ReviewReplyEdit = () => {
           message: '리뷰 답변 수정이 완료되었습니다.',
           type: 'success',
         })
-        navigate('/')
+        navigate('/', { replace: true })
       },
     })
   }
 
   return (
-    <div className="flex h-full w-full max-w-[37.5rem] flex-col p-5 text-black">
-      <h1 className="text-lg dark:text-white md:text-2xl">{title}</h1>
-      {!initModal && (
-        <FormProvider {...methods}>
-          <ReviewReply
-            reviewData={reviewData}
-            handleSubmit={handleSubmitReply}
-          />
-        </FormProvider>
-      )}
-      <label ref={labelRef} htmlFor="review-previous-reply-load" />
-      <Modal
-        modalId="review-previous-reply-load"
-        content={`이전에 작성한 답변이 남아 있습니다.\n계속 진행하시겠습니까?`}
-        label="확인"
-        handleClickLabel={handleClickModal}
-        handleClose={handleClickCancelModal}
-      />
-    </div>
+    <>
+      <Header />
+      <div className="flex h-full w-full max-w-[37.5rem] flex-col p-5 text-black">
+        <h1 className="text-2xl font-bold dark:text-white md:text-4xl">
+          {title}
+        </h1>
+        <h3 className="mt-2.5 whitespace-pre-wrap text-lg dark:text-white md:text-2xl">
+          {description}
+        </h3>
+        {!initModal && (
+          <FormProvider {...methods}>
+            <ReviewReply
+              reviewData={reviewData}
+              handleSubmit={handleSubmitReply}
+            />
+          </FormProvider>
+        )}
+        <label ref={labelRef} htmlFor="review-previous-reply-load" />
+        <Modal
+          modalId="review-previous-reply-load"
+          content={`이전에 작성한 답변이 남아 있습니다.\n계속 진행하시겠습니까?`}
+          label="확인"
+          handleClickLabel={handleClickModal}
+          handleClose={handleClickCancelModal}
+        />
+      </div>
+    </>
   )
 }
 

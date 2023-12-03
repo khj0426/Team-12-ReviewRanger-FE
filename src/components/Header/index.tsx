@@ -1,14 +1,15 @@
 import { memo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useToast } from '@/hooks'
+import { useDarkMode, useToast } from '@/hooks'
 import { useUser, useLogout } from '@/apis/hooks'
 import {
   LogoRowIcon,
   LogoShortIcon,
   ArrowLeftIcon,
-  BasicProfileIcon,
+  SunIcon,
+  MoonIcon,
 } from '@/assets/icons'
-import { rangerHead } from '@/assets/images'
+import { rangerCleanHead, BasicProfile } from '@/assets/images'
 import { Modal } from '..'
 import Dropdown from '../Dropdown'
 
@@ -24,6 +25,7 @@ const Header = memo(({ handleGoBack }: HeaderProps) => {
   const navigate = useNavigate()
 
   const { addToast } = useToast()
+  const { toggle, darkMode } = useDarkMode()
 
   const avatarVisible = pathname !== '/sign-up' && pathname !== '/login'
   const goBackVisible = pathname !== '/login' && pathname !== '/'
@@ -51,24 +53,34 @@ const Header = memo(({ handleGoBack }: HeaderProps) => {
           onClick={() => navigate('/')}
         >
           <img
-            src={rangerHead}
+            src={rangerCleanHead}
             alt="ranger-header"
-            className="h-8 w-8 md:h-11 md:w-10"
+            className="h-6 w-6 md:h-8 md:w-8"
           />
-          <LogoShortIcon className="h-7 w-8 md:hidden" />
+          <LogoShortIcon className="ml-1 h-7 w-8 md:hidden" />
           <LogoRowIcon className="hidden h-11 w-60 md:block" />
         </div>
-        <div>
+        <div className="flex items-center gap-x-3 md:gap-x-5">
+          <div
+            className="flex h-6 w-6 cursor-pointer items-center justify-center md:h-8 md:w-8"
+            onClick={toggle}
+          >
+            {darkMode ? (
+              <MoonIcon className="h-full w-full" />
+            ) : (
+              <SunIcon className="h-full w-full" />
+            )}
+          </div>
           {avatarVisible && user && (
             <>
               <Dropdown>
                 <Dropdown.Toggle className="avatar avatar-sm flex cursor-pointer items-center justify-center overflow-hidden border border-gray-200 bg-white md:avatar-md dark:bg-black">
                   {user?.path ? (
-                    <div className="flex h-7 w-7 p-0.5 md:h-9 md:w-9">
+                    <div className="flex h-7 w-7 md:h-9 md:w-9">
                       <img src={user.path} alt="my" />
                     </div>
                   ) : (
-                    <BasicProfileIcon className="h-7 w-7 md:h-9 md:w-9" />
+                    <img src={BasicProfile} className="h-7 w-7 md:h-9 md:w-9" />
                   )}
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="w-40 rounded-sm">
@@ -79,7 +91,16 @@ const Header = memo(({ handleGoBack }: HeaderProps) => {
                   <Dropdown.Item onClick={() => navigate('/profile')}>
                     마이페이지
                   </Dropdown.Item>
-                  <Dropdown.Item>슬랙 알림 보기</Dropdown.Item>
+                  <Dropdown.Item
+                    onClick={() =>
+                      addToast({
+                        message: '아직 준비중인 기능이에요 😥',
+                        type: 'info',
+                      })
+                    }
+                  >
+                    슬랙 알림 보기
+                  </Dropdown.Item>
                   <Dropdown.Item>
                     <label htmlFor="logout" className="cursor-pointer">
                       로그아웃

@@ -12,8 +12,19 @@ interface RadarChartProps {
 const RadarChart = ({ answers }: RadarChartProps) => {
   const { darkMode } = useDarkMode()
 
-  const labels = answers.map((answer) => answer.statName)
-  const data = answers.map((answer) => answer.statScore)
+  const statGroups = new Map<string, number[]>()
+
+  answers.forEach((answer) => {
+    const statGroup = statGroups.get(answer.statName)
+    statGroups.set(answer.statName, [...(statGroup || []), answer.statScore])
+  })
+
+  const labels = Array.from(statGroups.keys())
+  const data = Array.from(statGroups.values()).map((scores) => {
+    const average = scores.reduce((acc, cur) => acc + cur, 0) / scores.length
+
+    return Number(average.toFixed(2))
+  })
 
   const radarData: ChartData<'radar'> = {
     labels,
@@ -31,6 +42,8 @@ const RadarChart = ({ answers }: RadarChartProps) => {
   const radarOptions: ChartOptions<'radar'> = {
     scales: {
       r: {
+        suggestedMax: 10,
+        suggestedMin: 0,
         ticks: {
           stepSize: 10,
           count: 4,
@@ -38,7 +51,7 @@ const RadarChart = ({ answers }: RadarChartProps) => {
         },
         pointLabels: {
           font: {
-            size: 12,
+            size: 14,
           },
           color: darkMode ? '#fff' : '#000',
         },

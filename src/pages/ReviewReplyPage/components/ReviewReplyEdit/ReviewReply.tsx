@@ -53,15 +53,23 @@ const ReviewReply = ({ reviewData, handleSubmit }: ReviewReplyProps) => {
       question={question}
       index={index}
       receiverIndex={selectedReceiverIndex}
+      checkReplyComplete={checkReplyComplete}
     />
   ))
 
   return (
-    <div className="flex h-full flex-col justify-between">
-      <div className="flex flex-col gap-8 pt-2.5">
-        <h3 className="text-sm text-gray-300 dark:text-gray-400">{`응답자: ${selectedReceiver.name}`}</h3>
+    <div className="flex h-full flex-col justify-between gap-2">
+      <div className="flex flex-col gap-5 pt-2.5">
+        <div className="mt-2 flex items-center gap-2 text-base md:text-xl">
+          <span className="text-gray-300 dark:text-gray-400 ">
+            응답 대상자:
+          </span>
+          <span className="text-sub-orange dark:text-sub-yellow">
+            {selectedReceiver.name}
+          </span>
+        </div>
         <div className="flex flex-col gap-5">
-          <ul className="flex gap-2.5 overflow-x-auto">
+          <ul className="flex items-center gap-2.5 overflow-x-auto">
             {receivers.map((receiver, index) => (
               <ReceiverItem
                 key={receiver.receiverId}
@@ -74,7 +82,7 @@ const ReviewReply = ({ reviewData, handleSubmit }: ReviewReplyProps) => {
               />
             ))}
           </ul>
-          <ul className="flex gap-5 overflow-x-auto">
+          <ul className="flex items-center gap-5 overflow-x-auto">
             {questions.map((question, index) => (
               <QuestionItem
                 index={index}
@@ -87,6 +95,7 @@ const ReviewReply = ({ reviewData, handleSubmit }: ReviewReplyProps) => {
               />
             ))}
           </ul>
+          <hr />
         </div>
         {questionArray[selectedQuestionIndex]}
       </div>
@@ -97,7 +106,7 @@ const ReviewReply = ({ reviewData, handleSubmit }: ReviewReplyProps) => {
               htmlFor="review-reply"
               className="flex h-full w-full items-center justify-center"
             >
-              답변 제출하기
+              답변 수정하기
             </label>
           </button>
         ) : (

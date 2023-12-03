@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Question } from '@/types'
 import { ReviewReplyStartType, ReviewReplyEditType } from '../../types'
@@ -14,11 +15,17 @@ interface QuestionsProps {
   question: Question
   index: number
   receiverIndex: number
+  checkReplyComplete?: () => void
 }
 
 type ReplyCompletePath = `replyComplete.${number}.complete.${number}`
 
-const Questions = ({ question, index, receiverIndex }: QuestionsProps) => {
+const Questions = ({
+  question,
+  index,
+  receiverIndex,
+  checkReplyComplete,
+}: QuestionsProps) => {
   const replyCompletePath: ReplyCompletePath = `replyComplete.${receiverIndex}.complete.${index}`
   const { title, description, type, questionOptions, isRequired, id } = question
   const { setValue, getValues } = useFormContext<
@@ -29,53 +36,47 @@ const Questions = ({ question, index, receiverIndex }: QuestionsProps) => {
     `replyTargets.${receiverIndex}.replies`,
   ).findIndex(({ questionId }) => questionId === id)
 
-  const handleCheckReply = ({
-    value,
-  }: {
-    value: string | number | number[]
-  }) => {
-    if (!question.isRequired) {
-      if (type === 'HEXASTAT' && value !== 0 && value !== 6) {
-        setValue(replyCompletePath, false)
-      } else {
-        setValue(replyCompletePath, true)
+  const handleCheckReply = useCallback(
+    ({ value }: { value: number }) => {
+      if (!question.isRequired) {
+        if (type === 'HEXASTAT' && value !== 0 && value !== 6) {
+          setValue(replyCompletePath, false)
+        } else {
+          setValue(replyCompletePath, true)
+        }
+        checkReplyComplete && checkReplyComplete()
+
+        return
       }
 
-      return
-    }
+      setValue(
+        replyCompletePath,
+        type === 'HEXASTAT' ? value === 6 : value !== 0,
+      )
 
-    switch (type) {
-      case 'SUBJECTIVE':
-        setValue(replyCompletePath, (value as string).trim().length > 0)
-        break
-      case 'SINGLE_CHOICE':
-      case 'DROPDOWN':
-      case 'RATING':
-        setValue(replyCompletePath, value !== 0)
-        break
-      case 'MULTIPLE_CHOICE':
-        setValue(replyCompletePath, (value as number[]).length > 0)
-        break
-      case 'HEXASTAT':
-        setValue(replyCompletePath, value === 6)
-        break
-      default:
-        break
-    }
-  }
+      checkReplyComplete && checkReplyComplete()
+    },
+    [
+      replyCompletePath,
+      type,
+      question.isRequired,
+      setValue,
+      checkReplyComplete,
+    ],
+  )
 
   return (
     <div className={`flex flex-col gap-2.5`}>
       <div className="flex justify-between">
-        <h2 className="text-lg dark:text-white">{title}</h2>
+        <h2 className="text-lg dark:text-white md:text-2xl">{title}</h2>
         {isRequired && (
-          <h3 className="text-sm text-sub-red-200 dark:text-active-orange">
+          <h3 className="text-sm text-sub-red-200 dark:text-active-orange md:text-lg">
             필수 질문
           </h3>
         )}
       </div>
       {description && (
-        <p className="min-h-[2.5rem] text-sm text-gray-300 dark:text-gray-400">
+        <p className="mb-2 min-h-[2.5rem] whitespace-pre-wrap text-sm text-gray-300 dark:text-gray-400 md:text-lg">
           {description}
         </p>
       )}

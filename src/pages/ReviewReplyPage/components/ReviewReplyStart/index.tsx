@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useToast } from '@/hooks'
+import { Header, Modal } from '@/components'
 import { useCreateResponse, useGetReviewForParticipation } from '@/apis/hooks'
 import { ReviewReplyStartType } from '../../types'
+import ReceiverSelect from './ReceiverSelect'
 import ReviewReply from './ReviewReply'
-import ReceiverSelect from './ReviewSelect'
 
 const ReviewReplyStart = () => {
   const navigate = useNavigate()
@@ -13,6 +14,7 @@ const ReviewReplyStart = () => {
   const { pathname, state } = useLocation()
   const reviewId = parseInt(pathname.split('/').at(-1) as string)
   const [reviewStep, setReviewStep] = useState(1)
+  const goBackLabelRef = useRef<HTMLLabelElement>(null)
 
   const { data: reviewData } = useGetReviewForParticipation({ id: reviewId })
   const { mutate: createResponse } = useCreateResponse()
@@ -37,34 +39,58 @@ const ReviewReplyStart = () => {
           message: '리뷰 답변 제출이 완료되었습니다.',
           type: 'success',
         })
-        navigate('/')
+        navigate('/', { replace: true })
       },
     })
   }
 
+  const handleGoBack = () => {
+    if (reviewStep === 1) {
+      navigate('/')
+
+      return
+    }
+
+    if (goBackLabelRef.current) {
+      goBackLabelRef.current.click()
+    }
+  }
+
   return (
-    <div className="flex h-full w-full max-w-[37.5rem] flex-col p-5 text-black">
-      <h1 className="text-lg dark:text-white md:text-2xl">{title}</h1>
-      {reviewStep === 1 && (
-        <p className="mt-2.5 whitespace-pre-wrap text-sm dark:text-white md:text-lg">
-          {description}
-        </p>
-      )}
-      <FormProvider {...methods}>
+    <>
+      <Header handleGoBack={handleGoBack} />
+      <div className="flex h-full w-full max-w-[37.5rem] flex-col p-5 text-black">
+        <h1 className="text-2xl font-bold dark:text-white md:text-4xl">
+          {title}
+        </h1>
         {reviewStep === 1 && (
-          <ReceiverSelect
-            setReviewStep={setReviewStep}
-            questions={reviewData.questions}
-          />
+          <h3 className="mt-2.5 whitespace-pre-wrap text-sm dark:text-white md:text-lg">
+            {description}
+          </h3>
         )}
-        {reviewStep === 2 && (
-          <ReviewReply
-            reviewData={reviewData}
-            handleSubmit={handleSubmitReply}
+        <FormProvider {...methods}>
+          {reviewStep === 1 && (
+            <ReceiverSelect
+              setReviewStep={setReviewStep}
+              questions={reviewData.questions}
+            />
+          )}
+          {reviewStep === 2 && (
+            <ReviewReply
+              reviewData={reviewData}
+              handleSubmit={handleSubmitReply}
+            />
+          )}
+          <label htmlFor="go-back" ref={goBackLabelRef}></label>
+          <Modal
+            modalId="go-back"
+            content={`페이지를 벗어나면 지금까지 작성한 내용이 모두 삭제됩니다.\n\n뒤로 가시겠습니까?`}
+            label="뒤로 가기"
+            handleClickLabel={() => navigate('/')}
           />
-        )}
-      </FormProvider>
-    </div>
+        </FormProvider>
+      </div>
+    </>
   )
 }
 

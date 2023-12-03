@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { useToast } from '@/hooks'
 import {
   useGetReviewForCreator,
   useGetResponseByReceiver,
   useSaveFinalResult,
-  useUpdateFinalReviewAnswer,
 } from '@/apis/hooks'
 import { CloseDropDownIcon } from '@/assets/icons'
 import { ProfileGroup, AnswerGroup } from '..'
@@ -25,8 +23,7 @@ const ReceiverReviewDetail = ({
 }: ReviewDetailAccordionProps) => {
   //NOTE - 하나라도 응답 실패했을 떄 처리
 
-  const { addToast } = useToast()
-  const hasAnswered = useRef(false)
+  const hasAnswered = useRef<number[]>([])
   const { data: getReviewQuestion } = useGetReviewForCreator({
     id: Number(reviewId),
   })
@@ -52,7 +49,7 @@ const ReceiverReviewDetail = ({
         })
 
       case 'SUBJECTIVE': {
-        const result = answer?.map((value) => value.value)?.join('')
+        const result = answer?.map((value) => value.value)?.join('\n')
 
         return result === '' ? [] : new Array(result)
       }
@@ -86,14 +83,19 @@ const ReceiverReviewDetail = ({
 
   const { mutate: saveFinalResult } = useSaveFinalResult(saveFinalReviewResult)
 
-  const { mutate: updateFinalReviewAnswer } = useUpdateFinalReviewAnswer()
   useEffect(() => {
     if (
+      getReviewQuestion.status === 'END' ||
+      getReviewQuestion.status === 'PROCEEDING'
+    ) {
+      return
+    }
+    if (
       !ResponserList?.includes(Number(receiverId)) &&
-      hasAnswered.current.valueOf() === false
+      !hasAnswered.current.includes(Number(receiverId))
     ) {
       saveFinalResult()
-      hasAnswered.current = true
+      hasAnswered.current = [...hasAnswered.current, Number(receiverId)]
     }
   }, [receiverId])
 
@@ -102,55 +104,40 @@ const ReceiverReviewDetail = ({
     responseByReceiver?.map((data) => data?.responser?.id.toString()),
   )
 
-  const handleUpdateFinalReviewAnswer = (
-    updatedAnswer: string,
-    questionId: string,
-  ) => {
-    updateFinalReviewAnswer(
-      {
-        userId: receiverId,
-        answer: updatedAnswer,
-        reviewId,
-        questionId,
-      },
-      {
-        onSuccess: ({ success }) => {
-          if (success) {
-            addToast({ message: '성공적으로 저장되었습니다!', type: 'success' })
-          }
-        },
-      },
-    )
-  }
-
   return (
     <>
-      <label htmlFor="drawer" className="overlay"></label>
-      <div className="drawer drawer-bottom m-0 flex h-5/6 w-full  flex-col items-center gap-10 overflow-auto bg-main-ivory dark:bg-main-red-100 md:h-[32rem]">
+      <label className="overlay" htmlFor="drawer-bottom"></label>
+      <div className="drawer drawer-bottom m-0 flex h-[90%] w-full flex-col items-center gap-10 overflow-auto bg-main-ivory dark:bg-main-red-100 md:h-5/6">
         <div className="sticky top-0 z-50 flex h-[30px] w-full shrink-0 flex-col items-center justify-center bg-main-yellow dark:bg-main-red-200 sm:h-[40px]">
-          <label htmlFor="drawer-bottom" className="flex w-full justify-center">
+          <label
+            htmlFor="drawer-bottom"
+            className="flex w-full cursor-pointer justify-center"
+          >
             <CloseDropDownIcon className="h-[1rem] w-[1rem] cursor-pointer fill-black stroke-black text-black dark:fill-white dark:stroke-white dark:text-white md:h-[1.25rem] md:w-[1.25rem]" />
           </label>
         </div>
-        <div className="accordion-group m-0 mb-[10px] flex w-[21.875rem] max-w-[550px] flex-col gap-10 md:w-[34.375rem]">
+        <div className="mx-auto w-full max-w-[550px] self-start px-2.5">
           <ProfileGroup
             type="receiver"
             name={receiverName}
             responserSize={responserCount?.size}
           />
+        </div>
+        <div className="accordion-group m-0 mb-[10px] flex w-[21.875rem] max-w-[550px] flex-col gap-10 md:w-[34.375rem]">
           {getReviewQuestion?.questions?.map((question) => (
             <AnswerGroup
               questionType={question?.type}
               questionTitle={question?.title}
+              questionId={question?.id}
               key={question?.id}
               answers={getAnswer(
                 question?.type,
                 question?.id,
                 responseByReceiver,
               )}
-              onClickCleanButton={(newAnswer: string) => {
-                handleUpdateFinalReviewAnswer(newAnswer, question.id + '')
-              }}
+              reviewId={reviewId}
+              userId={receiverId}
+              reviewStatus={getReviewQuestion?.status}
             />
           ))}
         </div>
