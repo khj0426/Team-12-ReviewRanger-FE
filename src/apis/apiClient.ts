@@ -2,7 +2,7 @@ import axios from 'axios'
 import { TOKEN_KEY } from '@/constants'
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_KEY,
+  baseURL: '/api',
 })
 
 apiClient.interceptors.request.use(
@@ -18,3 +18,4 @@ apiClient.interceptors.request.use(
 )
 
 export default apiClient
+
