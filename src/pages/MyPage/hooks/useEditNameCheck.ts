@@ -1,3 +1,4 @@
+import { isAxiosError } from 'axios'
 import { Dispatch, SetStateAction, useRef, useState } from 'react'
 import { useToast } from '@/hooks'
 import { useEditName, useUser } from '@/apis/hooks'
@@ -30,17 +31,21 @@ const useEditNameCheck = ({
   }
 
   const handleEditNameEndingClick = () => {
-    if (nameRef.current) {
-      nameRef.current.click()
-    }
     if (currentName === name || !name) {
       setEditNameButton(false)
+      setNameFailMessage('')
 
       return
     }
     if (nameFailMessage) {
       return
     }
+    if (nameRef.current) {
+      nameRef.current.click()
+    }
+  }
+
+  const handleChangeNameComplete = () => {
     editName(
       { name },
       {
@@ -52,12 +57,18 @@ const useEditNameCheck = ({
           }
 
           await refetch()
+
           setEditNameButton(false)
           setName('')
           addToast({
             message: '이름 변경이 완료되었습니다.',
             type: 'success',
           })
+        },
+        onError: (error) => {
+          if (isAxiosError(error)) {
+            addToast({ message: error.response?.data.message, type: 'error' })
+          }
         },
       },
     )
@@ -68,6 +79,7 @@ const useEditNameCheck = ({
     editNameButton,
     handleEditNameStartingClick,
     handleEditNameEndingClick,
+    handleChangeNameComplete,
   }
 }
 
